@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Web Encryptor/Decryptor</title>
+    <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+</head>
+<body>
+    <label>Encryption key: <input type="text" id="enkey"></label>
+    <textarea name="plain" id="plain" cols="30" rows="10"></textarea>
+    <textarea name="scram" id="scram" cols="30" rows="10"></textarea>
+    <button id="encry">Encrpyt</button>
+    <button id="decry">Decrypt</button>
+    <script>
+        var plain = document.getElementById('plain')
+        var scram = document.getElementById('scram')
+
+        var enkey = document.getElementById('enkey')
+        var encry = document.getElementById('encry')
+        var decry = document.getElementById('decry')
+
+        function getKey() {
+            var key = enkey.value.split('').map(c => c.charCodeAt(0))
+
+            var pad_array = function(arr,len,fill) {
+                return arr.concat(Array(len).fill(fill)).slice(0,len);
+            }
+
+            if (key.length < 16) {
+                key = pad_array(key, 16, 0)
+            }
+            else if (key.length < 24) {
+                key = pad_array(key, 24, 0)
+            }
+            else if (key.length < 32) {
+                key = pad_array(key, 32, 0)
+            }
+            else {
+                alert('key too long')
+                return
+            }
+            
+            return new Uint8Array(key)
+        }
+
+        function getAesCtr(somenum) {
+            var key = getKey()
+            return new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(5))
+        }
+
+        encry.onclick = e => {
+            var bytes = aesjs.utils.utf8.toBytes(plain.value)
+
+            var aesCtr = getAesCtr(5)
+            var encryptedBytes = aesCtr.encrypt(bytes)
+            var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes)
+
+            scram.value = encryptedHex
+        }
+
+        decry.onclick = e => {
+            var encryptedBytes = aesjs.utils.hex.toBytes(scram.value)
+
+            var aesCtr = getAesCtr(5)
+            var decryptedBytes = aesCtr.decrypt(encryptedBytes)
+
+            var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+
+            plain.value = decryptedText
+        }
+
+
+    </script>
+</body>
+</html>
